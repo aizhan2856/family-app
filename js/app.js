@@ -165,6 +165,9 @@ const S = {
    🍽️ DINNER
 ══════════════════════════════════════════════════ */
 
+// Module-level dish index — avoids quoting issues in onclick attrs
+let _dishIndex = [];
+
 const Dinner = {
   render() {
     this._renderDishes();
@@ -174,13 +177,13 @@ const Dinner = {
   _renderDishes() {
     const presetNames = DISHES.map(d => d.name);
     const emojiMap    = Object.fromEntries(DISHES.map(d => [d.name, d.emoji]));
-    const allDishes   = [...presetNames, ...S.dinnerCustom];
+    _dishIndex        = [...presetNames, ...S.dinnerCustom];
 
-    document.getElementById('dish-grid').innerHTML = allDishes.map(name => {
+    document.getElementById('dish-grid').innerHTML = _dishIndex.map((name, i) => {
       const active = S.dinnerMyVotes[name] ? 'active' : '';
       const emoji  = emojiMap[name] || '🍴';
       return `<button class="dish-pill ${active}"
-        onclick="Dinner.toggle(${JSON.stringify(name)})">${emoji} ${esc(name)}</button>`;
+        onclick="Dinner.toggleIdx(${i})">${emoji} ${esc(name)}</button>`;
     }).join('');
   },
 
@@ -201,6 +204,11 @@ const Dinner = {
           <span class="vote-bar-count">${count}</span>
         </div>`;
       }).join('');
+  },
+
+  toggleIdx(i) {
+    const name = _dishIndex[i];
+    if (name !== undefined) this.toggle(name);
   },
 
   toggle(name) {
@@ -250,7 +258,7 @@ const Shopping = {
       ? '<li class="no-items">Список пуст 🛒</li>'
       : items.map(item => `
         <li class="check-item ${item.done ? 'done' : ''}"
-            onclick="Shopping.toggle(${JSON.stringify(item.id)})">
+            onclick="Shopping.toggle('${item.id}')">
           <div class="check-box">${item.done ? '<i class="ti ti-check"></i>' : ''}</div>
           <span class="check-label">${esc(item.text)}</span>
         </li>`).join('');
@@ -286,7 +294,7 @@ const Tasks = {
       ? '<li class="no-items">Заданий нет ✨</li>'
       : tasks.map(t => `
         <li class="check-item task-item ${t.done ? 'done' : ''}"
-            onclick="Tasks.toggle(${JSON.stringify(t.id)})">
+            onclick="Tasks.toggle('${t.id}')">
           <div class="check-box">${t.done ? '<i class="ti ti-check"></i>' : ''}</div>
           <span class="check-label">${esc(t.text)}</span>
           <span class="who-tag ${t.who}">${WHO_LABELS[t.who] || t.who}</span>
@@ -399,7 +407,7 @@ const Cal = {
         <li class="outing-item">
           <span class="who-tag ${o.who}">${WHO_LABELS[o.who] || o.who}</span>
           <span class="outing-text">${esc(o.text)}</span>
-          <button class="btn-remove" onclick="Cal.removeOuting(${JSON.stringify(o.id)})"
+          <button class="btn-remove" onclick="Cal.removeOuting('${o.id}')"
             aria-label="Удалить">×</button>
         </li>`).join('');
   },
