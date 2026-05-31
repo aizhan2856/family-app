@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="ru" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Наша семья 🏡</title>
+  <meta name="description" content="Семейное приложение для координации быта" />
+  <meta name="theme-color" content="#D4537E" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+<!-- ══════════ HEADER ══════════ -->
+<header class="app-header">
+  <div class="header-inner">
+    <div class="header-logo">
+      <span class="logo-emoji">🏡</span>
+      <div>
+        <h1 class="app-title">Наша семья</h1>
+        <p class="app-subtitle">Семейное пространство</p>
+      </div>
+    </div>
+    <button class="theme-toggle" id="theme-toggle" aria-label="Переключить тему">
+      <i class="ti ti-moon" id="theme-icon"></i>
+    </button>
+  </div>
+</header>
+
+<!-- ══════════ GRID ══════════ -->
+<main class="app-grid">
+
+  <!-- 🍽️ ЧТО НА УЖИН -->
+  <section class="card card-dinner" id="dinner-card">
+    <div class="card-header">
+      <span class="card-emoji">🍽️</span>
+      <h2 class="card-title">Что на ужин?</h2>
+      <button class="btn-icon-sm" id="dinner-reset" title="Сбросить голоса">
+        <i class="ti ti-refresh"></i>
+      </button>
+    </div>
+    <div class="dish-grid" id="dish-grid"></div>
+    <div class="vote-bars" id="vote-bars"></div>
+    <div class="add-row">
+      <input type="text" id="dinner-input" class="text-input" placeholder="Своё блюдо…" />
+      <button class="btn-add btn-add-dinner" id="dinner-add-btn" aria-label="Добавить блюдо">
+        <i class="ti ti-plus"></i>
+      </button>
+    </div>
+  </section>
+
+  <!-- 🛒 СПИСОК ПРОДУКТОВ -->
+  <section class="card card-shopping" id="shopping-card">
+    <div class="card-header">
+      <span class="card-emoji">🛒</span>
+      <h2 class="card-title">Список продуктов</h2>
+      <span class="badge badge-ali" id="shopping-badge">0 куплено</span>
+    </div>
+    <ul class="check-list" id="shopping-list"></ul>
+    <div class="add-row">
+      <input type="text" id="shopping-input" class="text-input" placeholder="Добавить продукт…" />
+      <button class="btn-add btn-add-ali" id="shopping-add-btn" aria-label="Добавить продукт">
+        <i class="ti ti-plus"></i>
+      </button>
+    </div>
+  </section>
+
+  <!-- ✅ ЗАДАНИЯ ОТ МАМЫ -->
+  <section class="card card-tasks" id="tasks-card">
+    <div class="card-header">
+      <span class="card-emoji">✅</span>
+      <h2 class="card-title">Задания от мамы</h2>
+      <span class="badge badge-mom" id="tasks-badge">0/0</span>
+    </div>
+    <ul class="check-list tasks-list" id="tasks-list"></ul>
+    <!-- Add task form (visible to all in v1) -->
+    <div class="add-row" style="margin-top:10px">
+      <select class="who-select" id="task-who">
+        <option value="ali">Али</option>
+        <option value="aydar">Айдар</option>
+        <option value="all">Оба</option>
+      </select>
+      <input type="text" id="task-input" class="text-input" placeholder="Новое задание…" />
+      <button class="btn-add btn-add-mom" id="task-add-btn" aria-label="Добавить задание">
+        <i class="ti ti-plus"></i>
+      </button>
+    </div>
+  </section>
+
+  <!-- 🐱 КОТИК ХЭППИ -->
+  <section class="card card-cat" id="cat-card">
+    <div class="card-header">
+      <span class="card-emoji">🐱</span>
+      <h2 class="card-title" style="color:var(--cat)">Котик</h2>
+    </div>
+    <div class="cat-face">
+      <div class="cat-emoji-big" id="cat-emoji">🐱</div>
+      <div class="cat-name">Хэппи</div>
+    </div>
+    <ul class="toggle-list" id="cat-toggles"></ul>
+    <div class="cat-status" id="cat-status"></div>
+  </section>
+
+  <!-- 📅 ПЛАНЫ НА НЕДЕЛЮ (full width) -->
+  <section class="card card-calendar" id="calendar-card">
+    <div class="card-header">
+      <span class="card-emoji">📅</span>
+      <h2 class="card-title">Планы на неделю</h2>
+    </div>
+    <div class="week-strip" id="week-strip"></div>
+    <div class="events-panel" id="events-panel"></div>
+
+    <div class="outings-divider">🎉 Давайте сходим!</div>
+    <ul class="outings-list" id="outings-list"></ul>
+    <div class="outing-form">
+      <select class="who-select" id="outing-who">
+        <option value="mom">Мама</option>
+        <option value="ali">Али</option>
+        <option value="aydar">Айдар</option>
+      </select>
+      <input type="text" id="outing-input" class="text-input" placeholder="Предложить идею для выхода…" />
+      <button class="btn-add btn-add-all" id="outing-add-btn" aria-label="Добавить идею">
+        <i class="ti ti-plus"></i>
+      </button>
+    </div>
+  </section>
+
+</main>
+
+<script src="js/app.js"></script>
+</body>
+</html>
