@@ -68,11 +68,11 @@
     }
   ],
   "cat": [
-    false,
-    false,
+    true,
+    true,
     false
   ],
   "catDate": "",
   "outings": [],
-  "_ts": 1780422447046
+  "_ts": 1780422984807
 }
