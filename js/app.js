@@ -117,59 +117,79 @@ const S = {
       localStorage.setItem('family_outings',       JSON.stringify(this.outings));
       localStorage.setItem('family_selected_day',  this.selectedDay);
     } catch(e){ console.error('save',e); }
-    // Синхронизируем с облаком (если настроен Firebase)
-    Cloud.push(this);
+    GHSync.schedulePush(this);  // синхронизация с облаком
   },
 };
 
 /* ══════════════════════════════════════════════════
-   ☁️  CLOUD SYNC — Firebase Realtime Database
-   Позволяет всем устройствам семьи видеть одни данные
-
-   КАК НАСТРОИТЬ (бесплатно, 5 минут):
-   1. Откройте https://console.firebase.google.com
-   2. «Создать проект» → любое имя → далее
-   3. Слева: «Realtime Database» → «Создать базу данных»
-      Выберите регион, режим: «начать в тестовом режиме»
-   4. Слева: ⚙️ «Настройки проекта» → «Ваши приложения»
-      Добавьте веб-приложение (</>), скопируйте firebaseConfig
-   5. Вставьте значения ниже вместо 'ВСТАВЬТЕ_СЮДА'
-   6. Сохраните и обновите страницу — все устройства синхронизируются!
+   ☁️  GITHUB SYNC
+   Хранит данные в family-app репозитории.
+   Все устройства читают/пишут через GitHub API.
+   Токен вводится ОДИН РАЗ и хранится в localStorage.
 ══════════════════════════════════════════════════ */
-const FIREBASE_CFG = {
-  apiKey:            'ВСТАВЬТЕ_СЮДА',
-  authDomain:        'ВСТАВЬТЕ_СЮДА',
-  databaseURL:       'ВСТАВЬТЕ_СЮДА',   // ← обязательно, формат: https://xxx.firebaseio.com
-  projectId:         'ВСТАВЬТЕ_СЮДА',
-  storageBucket:     'ВСТАВЬТЕ_СЮДА',
-  messagingSenderId: 'ВСТАВЬТЕ_СЮДА',
-  appId:             'ВСТАВЬТЕ_СЮДА',
-};
-
-const Cloud = {
-  db: null,
-  _ignoreNext: false,   // предотвращаем эхо собственных обновлений
+const GHSync = {
+  REPO: 'aizhan2856/family-app',
+  FILE: 'data/family.json',
+  KEY:  'family_sync_token',
+  _sha: null,
+  _writeTimer: null,
+  _pollTimer:  null,
 
   init() {
-    if (FIREBASE_CFG.apiKey === 'ВСТАВЬТЕ_СЮДА') {
-      this._banner(false); return;
-    }
+    // Проверяем invite-ссылку (?s=BASE64_TOKEN)
     try {
-      if (!firebase.apps.length) firebase.initializeApp(FIREBASE_CFG);
-      this.db = firebase.database().ref('family-app');
-      this._banner(true);
-      this._subscribe();
-    } catch(e) {
-      console.warn('Firebase init:', e);
-      this._banner(false);
-    }
+      const p = new URLSearchParams(window.location.search);
+      const s = p.get('s');
+      if (s) {
+        const t = atob(s);
+        if (t.startsWith('ghp_') || t.startsWith('github_pat_')) {
+          localStorage.setItem(this.KEY, t);
+          history.replaceState(null, '', window.location.pathname);
+        }
+      }
+    } catch(e) {}
+
+    const token = localStorage.getItem(this.KEY);
+    if (!token) { this._showSetup(); return; }
+    this._connect(token);
   },
 
-  push(state) {
-    if (!this.db) return;
-    this._ignoreNext = true;
-    // myVotes не синхронизируем (у каждого своё состояние кнопок голосования)
-    this.db.set({
+  _connect(token) {
+    this._banner('loading', '🔄 Подключение…');
+    this._pull(token)
+      .then(() => {
+        this._banner('on', '☁️ Синхронизировано — все устройства видят одни данные');
+        clearInterval(this._pollTimer);
+        this._pollTimer = setInterval(() => this._pull(token), 20000);
+      })
+      .catch(e => {
+        console.warn('GHSync connect:', e);
+        this._banner('off', '⚠️ Неверный код синхронизации — введите заново');
+      });
+  },
+
+  async _pull(token) {
+    const res = await fetch(
+      `https://api.github.com/repos/${this.REPO}/contents/${this.FILE}`,
+      { headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json' } }
+    );
+    if (!res.ok) throw new Error(res.status);
+    const meta = await res.json();
+    this._sha = meta.sha;
+    const raw  = decodeURIComponent(escape(atob(meta.content.replace(/\n/g,''))));
+    const data = JSON.parse(raw);
+    this._apply(data);
+  },
+
+  schedulePush(state) {
+    clearTimeout(this._writeTimer);
+    this._writeTimer = setTimeout(() => this._push(state), 1800);
+  },
+
+  async _push(state) {
+    const token = localStorage.getItem(this.KEY);
+    if (!token || !this._sha) return;
+    const data = {
       dinnerVotes:  state.dinnerVotes,
       dinnerCustom: state.dinnerCustom,
       shopping:     state.shopping,
@@ -177,43 +197,65 @@ const Cloud = {
       cat:          state.cat,
       catDate:      state.catDate,
       outings:      state.outings,
-    }).catch(e => { console.warn('Firebase push:', e); this._ignoreNext = false; });
+      _ts: Date.now(),
+    };
+    const content = btoa(unescape(encodeURIComponent(JSON.stringify(data, null, 2))));
+    try {
+      const res = await fetch(
+        `https://api.github.com/repos/${this.REPO}/contents/${this.FILE}`,
+        {
+          method: 'PUT',
+          headers: { 'Authorization': `token ${token}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message: 'family data update', content, sha: this._sha }),
+        }
+      );
+      if (res.ok) {
+        const d = await res.json(); this._sha = d.content.sha;
+        this._banner('on', '☁️ Синхронизировано');
+      } else if (res.status === 409 || res.status === 422) {
+        // SHA устарел — перечитываем и повторяем
+        await this._pull(token); setTimeout(() => this._push(state), 500);
+      }
+    } catch(e) { console.warn('GHSync push:', e); }
   },
 
-  _subscribe() {
-    this.db.on('value', snap => {
-      if (this._ignoreNext) { this._ignoreNext = false; return; }
-      const d = snap.val();
-      if (!d) { this.push(S); return; }   // первый запуск — заполняем Firebase
+  _apply(data) {
+    if (!data) return;
+    const map = {
+      dinnerVotes:'dinnerVotes', dinnerCustom:'dinnerCustom',
+      shopping:'shopping', tasks:'tasks',
+      cat:'cat', catDate:'catDate', outings:'outings',
+    };
+    Object.entries(map).forEach(([k,v]) => { if (data[k] !== undefined) S[v] = data[k]; });
+    Dinner.render(); Shopping.render(); Tasks.render(); Cat.render(); Cal._outings();
+  },
 
-      // Применяем данные из облака к локальному стейту
-      if (d.dinnerVotes  !== undefined) S.dinnerVotes  = d.dinnerVotes  || {};
-      if (d.dinnerCustom !== undefined) S.dinnerCustom = d.dinnerCustom || [];
-      if (d.shopping     !== undefined) S.shopping     = d.shopping     || [];
-      if (d.tasks        !== undefined) S.tasks        = d.tasks        || [];
-      if (d.cat          !== undefined) S.cat          = d.cat          || [false,false,false];
-      if (d.catDate      !== undefined) S.catDate      = d.catDate      || '';
-      if (d.outings      !== undefined) S.outings      = d.outings      || [];
-
-      // Перерисовываем все блоки
-      Dinner.render();
-      Shopping.render();
-      Tasks.render();
-      Cat.render();
-      Cal._outings();
+  _showSetup() {
+    this._banner('off',
+      '📱 Данные только на этом устройстве. <a href="#" id="sync-open" style="color:inherit;font-weight:800;text-decoration:underline">Включить синхронизацию →</a>');
+    document.getElementById('sync-open')?.addEventListener('click', e => {
+      e.preventDefault(); document.getElementById('sync-modal').classList.remove('hidden');
     });
   },
 
-  _banner(online) {
+  saveToken() {
+    const t = document.getElementById('sync-token-inp').value.trim();
+    if (!t) return;
+    localStorage.setItem(this.KEY, t);
+    document.getElementById('sync-modal').classList.add('hidden');
+    clearInterval(this._pollTimer); this._sha = null;
+    this._connect(t);
+  },
+
+  _banner(type, html) {
     const b = document.getElementById('sync-banner');
     if (!b) return;
-    if (online) {
-      b.textContent = '☁️ Синхронизация включена — все устройства семьи видят одни данные';
-      b.className = 'sync-banner sync-on';
-    } else {
-      b.textContent = '📱 Данные сохраняются только на этом устройстве. Настройте Firebase для синхронизации.';
-      b.className = 'sync-banner sync-off';
-    }
+    b.innerHTML = html;
+    b.className = `sync-banner sync-${type}`;
+    // Повторно привязываем клик если есть ссылка
+    document.getElementById('sync-open')?.addEventListener('click', e => {
+      e.preventDefault(); document.getElementById('sync-modal').classList.remove('hidden');
+    });
   },
 };
 
@@ -446,8 +488,8 @@ const Theme = {
    BOOT  — event delegation replaces ALL inline onclick
 ══════════════════════════════════════════════════ */
 document.addEventListener('DOMContentLoaded', () => {
-  S.load();        // сначала загружаем из localStorage (мгновенно)
-  Cloud.init();    // затем подключаем Firebase (синхронизирует данные в реальном времени)
+  S.load();       // загружаем из localStorage (мгновенно)
+  GHSync.init();  // подключаем GitHub-синхронизацию
   Theme.init();
   Cal.init();
 
@@ -512,4 +554,12 @@ document.addEventListener('DOMContentLoaded', () => {
   });
   document.getElementById('outing-add-btn').addEventListener('click', ()=>Cal.addOuting());
   document.getElementById('outing-input').addEventListener('keydown', e=>e.key==='Enter'&&Cal.addOuting());
+
+  /* ── Sync setup modal */
+  const sm = document.getElementById('sync-modal');
+  document.getElementById('sync-modal-close')?.addEventListener('click',  ()=>sm.classList.add('hidden'));
+  document.getElementById('sync-modal-cancel')?.addEventListener('click', ()=>sm.classList.add('hidden'));
+  document.getElementById('sync-modal-save')?.addEventListener('click',   ()=>GHSync.saveToken());
+  document.getElementById('sync-token-inp')?.addEventListener('keydown',  e=>e.key==='Enter'&&GHSync.saveToken());
+  sm?.addEventListener('click', e=>{ if(e.target===sm) sm.classList.add('hidden'); });
 });

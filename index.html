@@ -19,9 +19,6 @@
   <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css" />
   <link rel="stylesheet" href="css/style.css" />
-  <!-- Firebase SDK (для синхронизации между устройствами) -->
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
 </head>
 <body>
 
@@ -140,6 +137,33 @@
   </section>
 
 </main>
+
+<!-- Модал настройки синхронизации -->
+<div id="sync-modal" class="sync-modal-overlay hidden">
+  <div class="sync-modal-box">
+    <div class="sync-modal-header">
+      <span>☁️ Синхронизация между устройствами</span>
+      <button id="sync-modal-close">✕</button>
+    </div>
+    <div class="sync-modal-body">
+      <p>Чтобы мама, Али и Айдар видели одни данные — введите код синхронизации.</p>
+      <input type="password" id="sync-token-inp"
+             placeholder="Вставьте код (начинается на ghp_…)"
+             autocomplete="off" />
+      <div class="sync-modal-hint">
+        💡 <b>Как получить код:</b><br>
+        1. Откройте <a href="https://github.com/settings/tokens/new?scopes=public_repo&description=family-app-sync" target="_blank">эту ссылку</a> в браузере<br>
+        2. Нажмите зелёную кнопку «Generate token»<br>
+        3. Скопируйте токен и вставьте сюда<br>
+        4. Поделитесь <b>той же ссылкой-приглашением</b> с семьёй — им вводить ничего не надо!
+      </div>
+    </div>
+    <div class="sync-modal-footer">
+      <button id="sync-modal-cancel" class="sync-btn-cancel">Отмена</button>
+      <button id="sync-modal-save"   class="sync-btn-save">Сохранить и включить</button>
+    </div>
+  </div>
+</div>
 
 <script src="js/app.js"></script>
 <script>

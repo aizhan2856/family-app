@@ -1,5 +1,5 @@
 /* Service Worker — Наша семья PWA */
-const CACHE = 'family-app-v2';
+const CACHE = 'family-app-v3';
 
 const ASSETS = [
   './',

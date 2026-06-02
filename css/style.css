@@ -104,8 +104,71 @@ ul { list-style: none; }
   padding: 7px 16px;
   transition: var(--tr);
 }
-.sync-on  { background: #D1FAE5; color: #065F46; }
-.sync-off { background: #FEF3C7; color: #92400E; }
+.sync-on      { background: #D1FAE5; color: #065F46; }
+.sync-off     { background: #FEF3C7; color: #92400E; }
+.sync-loading { background: #DBEAFE; color: #1E40AF; }
+.sync-error   { background: var(--danger-light, #FEE2E2); color: #991B1B; }
+
+/* Sync setup modal */
+.sync-modal-overlay {
+  position: fixed; inset: 0; z-index: 300;
+  background: rgba(0,0,0,.5);
+  display: flex; align-items: center; justify-content: center;
+  padding: 1rem;
+}
+.sync-modal-box {
+  background: var(--card-bg, white);
+  border-radius: 16px;
+  width: 420px; max-width: 95vw;
+  box-shadow: 0 10px 40px rgba(0,0,0,.2);
+  overflow: hidden;
+}
+.sync-modal-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 1rem 1.25rem;
+  background: linear-gradient(135deg, var(--all, #D4537E), var(--mom, #7F77DD));
+  color: white; font-weight: 700; font-size: .95rem;
+}
+.sync-modal-header button {
+  background: rgba(255,255,255,.25); border: none; color: white;
+  width: 26px; height: 26px; border-radius: 50%; cursor: pointer;
+  font-size: 1rem; display: flex; align-items: center; justify-content: center;
+}
+.sync-modal-body {
+  padding: 1.25rem;
+  display: flex; flex-direction: column; gap: .9rem;
+}
+.sync-modal-body p { font-size: .88rem; color: var(--text, #222); }
+.sync-modal-body input {
+  width: 100%; padding: .65rem .9rem;
+  border: 1.5px solid var(--border, #E5E7EB);
+  border-radius: 10px; font-family: monospace; font-size: .82rem;
+  background: var(--bg, #F4F5FB); color: var(--text, #222);
+}
+.sync-modal-body input:focus { outline: none; border-color: var(--all, #D4537E); }
+.sync-modal-hint {
+  font-size: .78rem; color: var(--text-muted, #9698AD);
+  background: var(--bg, #F4F5FB); padding: .8rem;
+  border-radius: 10px; line-height: 1.6;
+}
+.sync-modal-hint a { color: var(--all, #D4537E); }
+.sync-modal-footer {
+  display: flex; gap: .6rem; justify-content: flex-end;
+  padding: .9rem 1.25rem;
+  border-top: 1px solid var(--border, #E5E7EB);
+}
+.sync-btn-cancel {
+  padding: .5rem 1rem; border-radius: 8px;
+  border: 1.5px solid var(--border, #E5E7EB);
+  background: transparent; font-size: .85rem; font-weight: 600;
+  cursor: pointer; color: var(--text, #222);
+}
+.sync-btn-save {
+  padding: .5rem 1.2rem; border-radius: 8px;
+  background: var(--all, #D4537E); color: white;
+  border: none; font-size: .85rem; font-weight: 700; cursor: pointer;
+}
+.sync-btn-save:hover { filter: brightness(1.1); }
 
 /* ══════════════════════════════════════════════════
    GRID LAYOUT
