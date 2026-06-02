@@ -96,6 +96,18 @@ ul { list-style: none; }
 .theme-toggle:hover { background: var(--all-bg); color: var(--all); transform: rotate(15deg); }
 
 /* ══════════════════════════════════════════════════
+   SYNC BANNER
+══════════════════════════════════════════════════ */
+.sync-banner {
+  text-align: center;
+  font-size: 12px; font-weight: 600;
+  padding: 7px 16px;
+  transition: var(--tr);
+}
+.sync-on  { background: #D1FAE5; color: #065F46; }
+.sync-off { background: #FEF3C7; color: #92400E; }
+
+/* ══════════════════════════════════════════════════
    GRID LAYOUT
 ══════════════════════════════════════════════════ */
 .app-grid {

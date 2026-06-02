@@ -105,6 +105,7 @@ const S = {
 
   save() {
     try {
+      // Всегда сохраняем локально (кеш + myVotes — только для этого устройства)
       localStorage.setItem('family_dinner_votes',  JSON.stringify(this.dinnerVotes));
       localStorage.setItem('family_dinner_my',     JSON.stringify(this.dinnerMyVotes));
       localStorage.setItem('family_dinner_custom', JSON.stringify(this.dinnerCustom));
@@ -116,6 +117,103 @@ const S = {
       localStorage.setItem('family_outings',       JSON.stringify(this.outings));
       localStorage.setItem('family_selected_day',  this.selectedDay);
     } catch(e){ console.error('save',e); }
+    // Синхронизируем с облаком (если настроен Firebase)
+    Cloud.push(this);
+  },
+};
+
+/* ══════════════════════════════════════════════════
+   ☁️  CLOUD SYNC — Firebase Realtime Database
+   Позволяет всем устройствам семьи видеть одни данные
+
+   КАК НАСТРОИТЬ (бесплатно, 5 минут):
+   1. Откройте https://console.firebase.google.com
+   2. «Создать проект» → любое имя → далее
+   3. Слева: «Realtime Database» → «Создать базу данных»
+      Выберите регион, режим: «начать в тестовом режиме»
+   4. Слева: ⚙️ «Настройки проекта» → «Ваши приложения»
+      Добавьте веб-приложение (</>), скопируйте firebaseConfig
+   5. Вставьте значения ниже вместо 'ВСТАВЬТЕ_СЮДА'
+   6. Сохраните и обновите страницу — все устройства синхронизируются!
+══════════════════════════════════════════════════ */
+const FIREBASE_CFG = {
+  apiKey:            'ВСТАВЬТЕ_СЮДА',
+  authDomain:        'ВСТАВЬТЕ_СЮДА',
+  databaseURL:       'ВСТАВЬТЕ_СЮДА',   // ← обязательно, формат: https://xxx.firebaseio.com
+  projectId:         'ВСТАВЬТЕ_СЮДА',
+  storageBucket:     'ВСТАВЬТЕ_СЮДА',
+  messagingSenderId: 'ВСТАВЬТЕ_СЮДА',
+  appId:             'ВСТАВЬТЕ_СЮДА',
+};
+
+const Cloud = {
+  db: null,
+  _ignoreNext: false,   // предотвращаем эхо собственных обновлений
+
+  init() {
+    if (FIREBASE_CFG.apiKey === 'ВСТАВЬТЕ_СЮДА') {
+      this._banner(false); return;
+    }
+    try {
+      if (!firebase.apps.length) firebase.initializeApp(FIREBASE_CFG);
+      this.db = firebase.database().ref('family-app');
+      this._banner(true);
+      this._subscribe();
+    } catch(e) {
+      console.warn('Firebase init:', e);
+      this._banner(false);
+    }
+  },
+
+  push(state) {
+    if (!this.db) return;
+    this._ignoreNext = true;
+    // myVotes не синхронизируем (у каждого своё состояние кнопок голосования)
+    this.db.set({
+      dinnerVotes:  state.dinnerVotes,
+      dinnerCustom: state.dinnerCustom,
+      shopping:     state.shopping,
+      tasks:        state.tasks,
+      cat:          state.cat,
+      catDate:      state.catDate,
+      outings:      state.outings,
+    }).catch(e => { console.warn('Firebase push:', e); this._ignoreNext = false; });
+  },
+
+  _subscribe() {
+    this.db.on('value', snap => {
+      if (this._ignoreNext) { this._ignoreNext = false; return; }
+      const d = snap.val();
+      if (!d) { this.push(S); return; }   // первый запуск — заполняем Firebase
+
+      // Применяем данные из облака к локальному стейту
+      if (d.dinnerVotes  !== undefined) S.dinnerVotes  = d.dinnerVotes  || {};
+      if (d.dinnerCustom !== undefined) S.dinnerCustom = d.dinnerCustom || [];
+      if (d.shopping     !== undefined) S.shopping     = d.shopping     || [];
+      if (d.tasks        !== undefined) S.tasks        = d.tasks        || [];
+      if (d.cat          !== undefined) S.cat          = d.cat          || [false,false,false];
+      if (d.catDate      !== undefined) S.catDate      = d.catDate      || '';
+      if (d.outings      !== undefined) S.outings      = d.outings      || [];
+
+      // Перерисовываем все блоки
+      Dinner.render();
+      Shopping.render();
+      Tasks.render();
+      Cat.render();
+      Cal._outings();
+    });
+  },
+
+  _banner(online) {
+    const b = document.getElementById('sync-banner');
+    if (!b) return;
+    if (online) {
+      b.textContent = '☁️ Синхронизация включена — все устройства семьи видят одни данные';
+      b.className = 'sync-banner sync-on';
+    } else {
+      b.textContent = '📱 Данные сохраняются только на этом устройстве. Настройте Firebase для синхронизации.';
+      b.className = 'sync-banner sync-off';
+    }
   },
 };
 
@@ -348,7 +446,8 @@ const Theme = {
    BOOT  — event delegation replaces ALL inline onclick
 ══════════════════════════════════════════════════ */
 document.addEventListener('DOMContentLoaded', () => {
-  S.load();
+  S.load();        // сначала загружаем из localStorage (мгновенно)
+  Cloud.init();    // затем подключаем Firebase (синхронизирует данные в реальном времени)
   Theme.init();
   Cal.init();
 
