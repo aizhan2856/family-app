@@ -6,6 +6,14 @@
   <title>Наша семья 🏡</title>
   <meta name="description" content="Семейное приложение для координации быта" />
   <meta name="theme-color" content="#D4537E" />
+
+  <!-- PWA -->
+  <link rel="manifest" href="manifest.json" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="Наша семья" />
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
+
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
@@ -14,7 +22,7 @@
 </head>
 <body>
 
-<!-- ══════════ HEADER ══════════ -->
+<!-- HEADER -->
 <header class="app-header">
   <div class="header-inner">
     <div class="header-logo">
@@ -30,7 +38,6 @@
   </div>
 </header>
 
-<!-- ══════════ GRID ══════════ -->
 <main class="app-grid">
 
   <!-- 🍽️ ЧТО НА УЖИН -->
@@ -76,7 +83,6 @@
       <span class="badge badge-mom" id="tasks-badge">0/0</span>
     </div>
     <ul class="check-list tasks-list" id="tasks-list"></ul>
-    <!-- Add task form (visible to all in v1) -->
     <div class="add-row" style="margin-top:10px">
       <select class="who-select" id="task-who">
         <option value="ali">Али</option>
@@ -104,7 +110,7 @@
     <div class="cat-status" id="cat-status"></div>
   </section>
 
-  <!-- 📅 ПЛАНЫ НА НЕДЕЛЮ (full width) -->
+  <!-- 📅 ПЛАНЫ НА НЕДЕЛЮ -->
   <section class="card card-calendar" id="calendar-card">
     <div class="card-header">
       <span class="card-emoji">📅</span>
@@ -112,7 +118,6 @@
     </div>
     <div class="week-strip" id="week-strip"></div>
     <div class="events-panel" id="events-panel"></div>
-
     <div class="outings-divider">🎉 Давайте сходим!</div>
     <ul class="outings-list" id="outings-list"></ul>
     <div class="outing-form">
@@ -131,5 +136,15 @@
 </main>
 
 <script src="js/app.js"></script>
+<script>
+  /* Регистрируем Service Worker для работы офлайн и установки на телефон */
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('sw.js')
+        .then(r => console.log('SW registered:', r.scope))
+        .catch(e => console.log('SW error:', e));
+    });
+  }
+</script>
 </body>
 </html>

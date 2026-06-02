@@ -516,3 +516,35 @@ ul { list-style: none; }
 .outing-form {
   display: flex; gap: 7px; flex-wrap: wrap; align-items: stretch;
 }
+
+/* ══════════════════════════════════════════════════
+   DISH WRAP + DELETE
+══════════════════════════════════════════════════ */
+.dish-wrap { position: relative; display: inline-flex; }
+
+.btn-del-dish {
+  position: absolute; top: -5px; right: -5px;
+  width: 17px; height: 17px;
+  background: #EF4444; color: white;
+  border-radius: 50%;
+  font-size: 11px; font-weight: 800; line-height: 1;
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0; transition: opacity var(--tr);
+  border: 2px solid var(--card-bg);
+  cursor: pointer; z-index: 2;
+}
+.dish-wrap:hover .btn-del-dish { opacity: 1; }
+
+/* ══════════════════════════════════════════════════
+   DELETE BUTTON IN CHECK ITEMS (hover reveal)
+══════════════════════════════════════════════════ */
+.check-item .btn-remove {
+  opacity: 0;
+  width: 22px; height: 22px; flex-shrink: 0;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 15px; color: var(--text-muted);
+  transition: opacity var(--tr), background var(--tr), color var(--tr);
+}
+.check-item:hover .btn-remove { opacity: 1; }
+.check-item .btn-remove:hover { background: #FEE2E2; color: #EF4444; }
