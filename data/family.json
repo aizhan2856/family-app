@@ -1,0 +1,22 @@
+{
+  "dinnerVotes":{},
+  "dinnerCustom":[],
+  "shopping":[
+    {"id":"s1","text":"Молоко","done":false},
+    {"id":"s2","text":"Хлеб","done":false},
+    {"id":"s3","text":"Яйца","done":false},
+    {"id":"s4","text":"Помидоры","done":false},
+    {"id":"s5","text":"Сыр","done":false}
+  ],
+  "tasks":[
+    {"id":"t1","text":"Убрать в комнате","who":"ali","done":false},
+    {"id":"t2","text":"Помыть посуду","who":"aydar","done":false},
+    {"id":"t3","text":"Сделать уроки","who":"ali","done":false},
+    {"id":"t4","text":"Вынести мусор","who":"aydar","done":false},
+    {"id":"t5","text":"Покормить Хэппи вечером","who":"all","done":false}
+  ],
+  "cat":[false,false,false],
+  "catDate":"",
+  "outings":[],
+  "_v":1
+}
